@@ -1,0 +1,109 @@
+2.1
+
+To create a *scratch* buffer, I used C-x, b.
+
+To compute  2**(607 - 1) * (2**607 - 1), I wrote the lisp expression ( * (expt 2 (- 607 1)) (expt 2 (- 607 1))). Then typing C-x C-e, I evaluated the expression. I'm getting 70526891853356034531603979043031594940743371757357833919419337999977433871326190057052096664518845125780975284354914663582043862183185043558365634079656826243725326219902938648103648856146145787520889095860455531443591926858713371483719982145691511131075312745428721576814913895557944855745498204068445694181321575408727502406563906376986273529501741633684526596096.
+
+To evaluate the number of bits required to store 2**(607 - 1) * (2**607 - 1) I used the lisp expression (1+ (logb ( * (expt 2 (- 607 1)) (expt 2 (- 607 1))))). I'm getting 1213, which makes sense as the result of 606 + 606 + 1. 
+
+To evaluate the mathematical expression with emacs, I typed M-:, then ( * (expt 2 (- 607 1)) (expt 2 (- 607 1))) and enter. I'm getting 70526891853356034531603979043031594940743371757357833919419337999977433871326190057052096664518845125780975284354914663582043862183185043558365634079656826243725326219902938648103648856146145787520889095860455531443591926858713371483719982145691511131075312745428721576814913895557944855745498204068445694181321575408727502406563906376986273529501741633684526596096.
+
+After typing C-h b, I searched for the C-h k and M-SPC key bindings with C-s. 
+
+Next, typing C-h k C-h k  calls the describe key command with the describe key command as the target, opening the documentation for the functionality and options that come with the describe key. More specifically, it explains that the code for C-h k is in help.el, that it was probably introduced at Emacs 22.1, and that it is bound to C-h k, <help> k, etc. 
+
+Typing C-h k M-SPC leads to opening the describe key documentation for the just-one-space command. This is a command that deletes all whitespace surrounding a point, leaving just a single space in its place, running the just-one-space command under the hood, which in turn is calling the cycle-spacing command. The cycle-spacing command is being called in single-shot mode, indicating it shoudl remove all spaces and tabs but one space around the point. This command is compiled from a native Lisp command. The command was likely introduced at or before Emacs 22.1.
+
+Returning to the *scratch* buffer, I typed out some text with whitespace and practiced using M-SPC. 
+
+To view the source code of the command I used C-h k M-SPC, then navigated to the lisp definition and pressed enter. Doing so brought me to the function implementation which defines a function called just-one-space, the longer name for the key binding, which is calling a separate, more general function called cycle-spacing.
+
+In order to run the cycle-spacing command, I used M-: to evaluate an expression, then typed (cycle-spacing) with no parameters to carry out the default behavior of replacing whitespace with a single space.
+
+Similarly, the function can also be called by using M-x, then typing the command cycle-spacing.
+
+
+2.2
+Saved in gps-line.el.
+
+Hw2
+When the script is invoked on an empty file like /dev/null it throws an IndexError: list index out of range error.
+
+When the script is invoked with python3 instead of python2, we get a SyntaxError: invalid syntax on line 64. This is due to changing the 
+
+I used pattern matching to parse through the provided arguments, as well as to handle custom error messages. In the former case I compared the provided arguments to what I expected, set some variables, and proceeded with the final shuffle. In the latter case, whenever detecting an error, I called a function with my error messages, and used structual pattern matching to output the correct error.
+
+When invoking my shuf.py file with python2, it is throwing an error. This is due to the fact that Python Enhancement Proposal 636 was new to Python 3.10.0, meaning that the syntax of my code - which takes advantage of this feature - will not be understood by python 2.
+
+Test cases (among others unlisted):
+
+	python3 shuf.py -f
+	python3 shuf.py --fake
+	python3 shuf.py -e test -n 
+	python3 shuf.py -e test -n 1
+	python3 shuf.py -e test -n -1
+	python3 shuf.py -e test -n abc
+
+	python3 shuf.py -i
+	python3 shuf.py -i -
+	python3 shuf.py -i -1-30
+	python3 shuf.py -i 1-10
+	python3 shuf.py -i 1-10 1-10
+
+	python3 -i -e
+	python3 -e -i
+
+	python3 shuf.py -h
+	python3 shuf.py --help
+
+	python3 shuf.py temp.txt
+	python3 shuf.py temp.txt temp.txt
+
+	python3 shuf.py -e temp1.txt temp2.txt
+	python3 shuf.py -n 1 -e temp1.txt temp2.txt
+	python3 shuf.py -e -n 1 temp1.txt temp2.txt
+	python3 shuf.py -n 1 -e -e temp1.txt temp2.txt
+
+	python3 shuf.py -i 1-10
+	python3 shuf.py -i 10-10
+	python3 shuf.py -i 10-1
+	python3 shuf.py -i 1-20 -n 10
+	python3 shuf.py -i 1-10 -n 20 -r
+	python3 shuf.py -i 1-10 -e
+	python3 shuf.py -i 1-10 -e temp.txt
+
+	python3 shuf.py -r temp.txt
+	python3 shuf.py -r -n 10 temp.txt
+	python3 shuf.py -r -n 10 -e temp.txt
+	python3 shuf.py -r -n 10 -e test1 test2
+	python3 shuf.py -r -n 10 temp.txt -e
+
+	python3 shuf.py -n 2 temp.txt
+	python3 shuf.py -n -1 temp.txt
+	python3 shuf.py -n -1 -r temp.txt
+
+	python3 shuf.py
+	python3 shuf.py -
+	python3 shuf.py -r -
+	python3 shuf.py -r
+	python3 shuf.py -e -i 1-10
+	python3 shuf.py -e i 1-10
+	python3 shuf.py -r -n 10
+	python3 shuf.py -r -n 10 - 
+
+	python3 shuf.py -i=1-5
+	python3 shuf.py -i1-5
+	python3 shuf.py -input-range=1-5
+	python3 shuf.py -input_range=1-5
+	python3 shuf.py --input_range=1-5
+	python3 shuf.py --input_range=1-5
+	python3 shuf.py -input_range=1-5-5
+
+
+
+
+
+
+
+
+

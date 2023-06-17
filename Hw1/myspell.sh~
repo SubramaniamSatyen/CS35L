@@ -1,0 +1,2 @@
+#!/bin/sh
+cat /usr/share/dict/linux.words | tr -cs ",A-Za-z0-9-'/!" '[\n*]' | sort -u | comm -23 - sorted.words

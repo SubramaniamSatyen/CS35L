@@ -1,0 +1,53 @@
+Lab 1.1 - exer1.html, exer1.drib
+Lab 1.2 - exer2.html, exer2.drib
+Lab 1.3 - exer3.html, exer3.drib
+Lab 1.4 - exer4.html, exer4.drib
+Lab 1.5: 
+	1. "type" is a builtin shell command
+	   "sleep" is located in /usr/local/cs/bin/sleep
+           "sh" is located in /usr/bin/sh
+
+	2. The two commands in /usr/bin are sed and seq. 
+           "sed" is a stream editor, meaning it can be used to parse a stream of input (such as a file), and perform operations on it (remove text, add text, etc.)
+           "seq" is used to print a sequence of numbers, with a couple forms based on where to start, end, and how much to increment by. 
+
+	   Command used: echo /usr/bin/se?
+	   Logic: search for all the files in /usr/bin that start with the letters "se" and end with an additional third letter 
+	3. The file that is being executed is /usr/local/cs/emacs-28.2/bin/emacs-28.2
+
+	   Command used: readlink -f /usr/local/cs/bin/emacs
+	   Logic: read the link recursively to the underlying file
+
+	4. "gcc" is using version 12.2.0, found via the command "gcc -v".
+	   "/usr/bin/gcc" is using version 8.5.0 found via the command "/usr/bin/gcc -v".
+           My understanding of why the two are different programs is that the latter is built in from redhat-linux while the former is a custom version, presumably close to the latest.
+	
+	5. The symbolic mode "u+sx,o-w" refers to adding permissions to the owner user to set the group ID on execution and execute the file, while also removing write permissions from users not in the file group.
+
+	6. Used command "find /usr/local/cs -type d -daystart -mtime [num days to look back]". Wasn't returning any entries a day after lecture, but is now returning the directories, .../bin, .../share, .../src, and .../bash-5.2, and the directory itself. Alternatively, can use "ls /usr/local/cs -alt | head --lines=[number]" to view most recently edited directories/files. 
+
+	7. Used "whereis find" to find the location of the find command. Then used "find [location] -type l" to print the links in the location. Doesn't return any relevant results in the folder.
+
+	8. "ghc-8.2.2". Running command "ls /usr/lib64 -lta | head" to grab the top 10 entries from ls ordering by time, with the long format, and all files included and yielding "ghc-8.2.2" as the most recently modified file under the target directory.
+
+	9. The commands with "transpose" in emacs are "transpose-chars", "transpose-lines", "transpose-paragraphs", "transpose-regions", "transpose-sentences", "transpose-sexps", "transpose-words".
+	   This was found by opening emacs, opening the help menu with "M-x + help", then typing "a" to search for a command, and typing "transpose" to search for commands containing the keyword.
+
+	10. To invoke "yank", we can use "C-y". The command essentially functions as a paste feature for the most recently killed text
+
+	11. Without the -a flag, ls will not include as many files as dired (the former returns 373756 entries while the latter returns 373832). "dired" also has additional functionality, of allowing you to remove file, rename files, etc.
+
+	12. Found current login shell with "ps lt", looking at the bash process. To find decendent processes, used "ps l --ppid [bash process id]", searching for processes created by the shell. To find ancestor processes we can run ps --forest, and visually see the processes above the shell process.
+	    In my case the current PID was 1484894. The only decendent process was the ps command - 1485283, and there were no parent processes to my current shell (since I created it myself).
+
+1.6:
+
+Hw1
+A. Creating sorted.words by taking advantage of sort command and > redirect.
+
+B. "tr -c 'A-Za-z' '[\n*]'" runs a command starting a program that will wait for input (and get it from our .html file if we provide it), then will replace any character that is not in the first set (not a letter) with the character from the second set, in this case a new line \n. As per man file, \n* copies \n as many times as are needed so the size of set 2 matches that of set 1.
+C. "tr -cs 'A-Za-z' '[\n*]'" runs a command that waits for input (and get it from our .html file if we provide it), then replaces all continuous instances of non letter characters with a \n (ex: test123test would become test\ntest, test1test would become test\ntest).
+D. "tr -cs 'A-Za-z' '[\n*]' | sort" runs the command above, prompting the user for input (and get it from our .html file if we provide it), replacing all continuous instances of non letter characters with a \n and (upon reaching the end of the file CTRL + D) sorting these lines before printing them to the stdout console.
+E. "tr -cs 'A-Za-z' '[\n*]' | sort -u" runs the command above, with the distinction of only including unique lines.
+F. "tr -cs 'A-Za-z' '[\n*]' | sort -u | comm - sorted.words" runs the command above, piping the output to the compare function between our typed words and the sorted.words file we have. Output is in three columns - 1st corresponds to only in typed input, 2nd corresponds to only in sorted.words file, and 3rd corresponds to in both files
+G. "tr -cs 'A-Za-z' '[\n*]' | sort -u | comm -23 - sorted.words" runs the above command, suppressing the second and third columns to only print out the words that we typed that were not in sorted.wordsd
