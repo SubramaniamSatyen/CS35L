@@ -1,0 +1,191 @@
+1. Reading through through randall.c and Makefile.
+
+2. Adding 'make check' to Makefile
+	a. In order to check, we would need a prerequisite of the executable file
+	b. I created a variable (set to 10), that would correspond to the number of bytes to test
+	c. I realized that feeding the output of ./randall $(variable) to word count with the -c 
+	or --bytes flag, we can confirm the bytes
+	d. My final additions: 
+		testNum = 10
+		check: randall
+			./randall $(testNum) | wc -c
+
+3. Separating program into separate files
+	a. Begin with a relatively simple file: rand64-hw.c and rand64-hw.h. For the .c file, we'll
+	copy over the three hardware functions from the randall.c file to allow for these 
+	functions to be imported, remove the "static" keyword from them.
+	b. For the .h file, copy the same functions, but change them to function declarations. 
+	Then add a header guard.
+	c. Return to the .c file, include the .h file and include "#include <immintrin.h>" 
+	(without the quotes).
+	d. Return to the randall.c file and remove the three hardware functions. Include 
+	the .h file.
+	e. Modify the Makefile to compile the specific implementation file (in this case for 
+	rand64-hw.c), then compile the object file for randall.c, then combine the two object file.
+		randall: rand64-hw.o randall.o
+        		$(CC) $(CFLAGS) $^ -o $@
+
+		randall.o: randall.c rand64-hw.h
+        		$(CC) $(CFLAGS) randall.c -o randall.o -c
+
+		rand64-hw.o: rand64-hw.c rand64-hw.h
+        		$(CC) $(CFLAGS) rand64-hw.c -o rand64-hw.o -c
+	f. Repeat this process for the rand64-sw.c and rand64-sw.h files. In this case we will 
+	have to place both "#include <stdio.h>" and "#include <stdlib.h>" at the top of the file,
+	 and add "#include rand64-sw.h" in our randall.c file.
+	g. Repeat this process for the writebytes function and the output.c and output.h files, 
+	now adding "#include <limits.h>", "#include <stdbool.h>", and "#include <stdio.h>" to 
+	the output.c file and "#include output.h" to the randall.c file.
+	h. Finally, include the options.h file in randall.c. For now leave both options.h and 
+	options.c blank.
+	i. Here, I realized that the cpuid and functions were directly tied to the hardware 
+	implementation, so moved them to the rand64-hw.h and rand64-hw.c files.
+	j. All structs could generally remain static, while the functions used by the main 
+	function in randall.c could not.
+
+4. Modify the makefile to compile and link our organized program.
+	a. After modifing our makefile in 3.e to work for our factored out rand64-hw.c file,
+	we will now repeat this process for our other files...
+	b. For each pair of header and implementation files, create a new entry in the makefile
+	for [name].o: [name].c [name].h
+	c. For of these target prerequisite pairs, add a recipe consisting of $(CC) $(CFLAGS) 
+	[name].c -o [name].o -c
+	d. Add the [name].o file to the prerequisites for the randall target, final code should
+	look like: 
+		randall: rand64-hw.o rand64-sw.o output.o randall.o
+			$(CC) $(CFLAGS) $^ -o $@
+
+		output.o: output.c output.h
+			$(CC) $(CFLAGS) output.c -o output.o -c
+
+		rand64-sw.o: rand64-sw.c rand64-sw.h
+			$(CC) $(CFLAGS) rand64-sw.c -o rand64-sw.o -c
+
+		randall.o: randall.c rand64-hw.h
+			$(CC) $(CFLAGS) randall.c -o randall.o -c
+
+		rand64-hw.o: rand64-hw.c rand64-hw.h
+			$(CC) $(CFLAGS) rand64-hw.c -o rand64-hw.o -c
+
+5. Adding -i option to randall.c
+	a. Due to my unfamiliarity with getopt, I decided to first implement the solution in my
+	main function in randall.c, then move it to options.c and options.h
+	b. To begin, I examined the documentation for getopt, linked on the assignment 
+	specifications. 
+	c. Following the example code, I added a switch statement that parses through the
+	arguments, looking for -i, and noting if it sees a flag that it doesn't expect, or if
+	-i doesn't have an argument.
+	d. In order to distinguish between a lack of an argument, and an unknown argument, I
+	preceded my optstring with ':'.
+	e. Adding a case for '?' allowed us to handle unrecognized options
+	f. Adding a case for ':' allowed us to handle missing arguments
+	g. I broke the 'i' case into a series of three if statements (for rdrand, mrand48_r,
+	and /...) followed by an else statement catching the case of unknown arguments.
+	h. I broke the 'o' case into two cases, the first of which caught stdout, and the second
+	of which would assume the argument was an integer, and attempt to parse it.
+
+6. Moving option parsing to options.c and options.h
+	a. Begin by copying entirety of the getopt switch statement and preceding initialization 
+	and nbytes parsing.
+	b. Paste this code into a new function in options.c. The function should accept the same 
+	parameters as main - as it will need to proccess these.
+	c. Add an additional pass by pointer parameter - a struct that can store the option
+	information.
+	d. Add some code at the end of the function to load the processed variables into the pass 
+	by pointer parameter.
+	e. Modify the main function to initialize the pass by pointer parameter, include 
+	options.h, and call the new function.
+	f. Replace all instances of the option parsed variables from preexisting code to use 
+	member variables of struct.
+
+7. Adding input handling 
+	a. With processed options from implementing our options function, we can now act upon 
+	these variables.
+	b. By adding an if - else if - else structure for processing the possible -i flag 
+	parameter, I first handled the else case, where I moved the preexisting hardware code.
+	c. Handling the mrand48_r case, I copied the hardware functions to new functions, and 
+	added those functions to the if statement. 
+	d. As a static variable in the hardware file, I added a static struct drand48_data, and
+	within the init function set it to have a seed based off of the current time.
+	e. I modified the implementation function to call the mrand48_r with our seeded buffer 
+	and destination variable, then return the destination variable.
+	f. Now considering the file case, I modified our software implementation to accept a 
+	parameter for a target file, in place of where we were using /dev/random before.
+
+8. Adding output handling
+	a. To handle the output cases, I used an if - else structure, placing the existing code 
+	in the stdio case.
+	b. In the N bytes case, I began by allocating a buffer of the target number of bytes.
+	c. I then proceeded to fill the buffer with either N or the specified number of bytes, 
+	which ever was smaller.
+	d. I then used the C write function to write the content of the buffer.
+	e. By placing this into a while loop, similarly to how the stdio case worked, I was able
+	 to repeat the filling and writing process to print the desired number of bytes.
+	f. Finally, I used the C free function to clear the allocated memory.
+
+9. Cleaning up
+	a. I returned to my Makefile and added a series of simple test cases
+
+
+10. Timing
+	a. When running the following commands, I'm getting the respective time to completion...
+		time dd if=/dev/urandom ibs=8192 obs=8192 count=16384 >/dev/null		
+			real    0m0.915s
+			user    0m0.011s
+			sys     0m0.896s
+
+		time ./randall 133562368 >/dev/null
+			real    0m3.194s
+			user    0m3.159s
+			sys     0m0.008s
+
+		time ./randall 133562368 | cat >/dev/null		
+			real    0m3.335s
+			user    0m3.208s
+			sys     0m0.273s
+
+		time ./randall 133562368 >rand.data
+			real    0m3.318s
+			user    0m3.175s
+			sys     0m0.126s
+
+	b. I also tested the following options to see if I could get my time to be better...
+		time ./randall 133562368 -i /dev/urandom  >rand.data
+			real    0m3.657s
+			user    0m2.835s
+			sys     0m0.535s
+
+	 	time ./randall 133562368 -i /dev/random  >rand.data
+			real    0m3.490s
+			user    0m2.916s
+			sys     0m0.363s
+		
+		time ./randall 133562368 - i /dev/random >rand.data
+			real    0m3.427s
+			user    0m3.257s
+			sys     0m0.133s
+
+		time ./randall 133562368 - i /dev/urandom >rand.data
+			real    0m3.415s
+			user    0m3.140s
+			sys     0m0.190s
+		
+		time ./randall 133562368 -i /dev/random -o 113562368 >rand.data
+			real    7m57.705s
+			user    1m11.883s
+			sys     2m7.329s
+
+		time ./randall 133562368 -i mrand48_r  >rand.data
+			real    0m1.465s
+			user    0m0.702s
+			sys     0m0.142s
+
+		time ./randall 133562368 -i mrand48_r  | cat >/dev/null 
+			real    0m0.962s
+			user    0m0.758s
+			sys     0m0.285s
+
+		time ./randall 133562368 -i mrand48_r  >/dev/null
+			real    0m0.747s
+			user    0m0.713s
+			sys     0m0.028s
