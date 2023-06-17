@@ -1,0 +1,6 @@
+First I searched through the git log for the 2.33.1 release, with commit ID af6d1d602a8f64164b266364339c4e936d5bbc33.
+After finding the release and noting the date, I searched for diff --relative, finding a commit just over a month earlier, with commit ID c8f491668e46d66290aec97caaf94fe2c1ecccbd.
+I also found a commit with ID 872c9e67ecf9ecb525e320e46171027c7742e76a, with very similar changes, this time specified as a merge into maint (presumably the maintenence branch).
+The issue was fixed with commit ID c8f491668e46d66290aec97caaf94fe2c1ecccbd, as per the commit description.
+
+

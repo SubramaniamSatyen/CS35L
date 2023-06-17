@@ -1,0 +1,331 @@
+(Note: I'm working off of the code BEFORE adding history to the game)
+
+1. Restricting Adding New Pieces
+	a. Modify the state to include a turn number.
+		turnNum: 0,
+	b. Modify the handleClick() function to update the turn number.
+		turnNum: this.state.turnNum + 1
+	c. Add an if statement around the handleClick() body code to ONLY run
+	tic-tac-toe turn's when the turn number is below 6.
+		if (this.state.turnNum < 6){}
+	
+
+2. Identifying Piece To Move
+	a. Add an array to the state to keep track of the color of each square
+	(green squares will be selected to move)
+		color: Array(9).fill('white'),
+	b. Keep the color state the same if placing a new piece.
+		color: this.state.color,	
+	c. Modify the square function to accept a color as a prop
+		color = {this.state.color[i]}
+	d. Map the property to the backgroundColor style attribute.
+		style={{backgroundColor:props.color}}
+	e. Add code to check for winner (using calculateWinner() function to 
+	begin logic for turns after 6.
+		const squares = this.state.squares.slice();
+		if (calculateWinner(squares)) {
+			return;
+		}
+	f. Modify turns after turn number 6 to change the color of the selected
+	tile if the tile contains a symbol matching the current turn and all 
+	other tiles are uncolored.
+		let pieceSelected = this.state.color.includes('cyan');
+		if (!pieceSelected && this.state.squares[i] == 
+			(this.state.xIsNext ? 'O' : 'X')){
+			const color = this.state.color.slice();
+			color[i] = 'cyan';
+			
+          	this.setState({
+            		squares: this.state.squares,
+            		color: color,
+           		xIsNext: this.state.xIsNext,
+            		turnNum: this.state.turnNum + 1
+          	});
+	g. Add logic to unselect square if it is currently clicked.
+		if (pieceSelected){
+          	if (this.state.color[i] == 'cyan'){
+            		const color =  Array(9).fill('white');
+            		this.setState({
+             			squares: this.state.squares,
+              			color: color,
+              			xIsNext: this.state.xIsNext,
+              			turnNum: this.state.turnNum + 1
+            		});
+          	}
+        	}
+
+3. Creating piece movement
+	a. Calculate the index i corresponding to the adjacent tile positions. 
+	Check these positions for pieces. Color the tiles red if the tile is
+	already filled and green if it is open.
+          let up = i - 3
+          if (up >= 0 && up < 10){
+            if (this.state.squares[up] == null){
+              color[up] = 'green'
+            } else{
+              color[up] = 'red'
+            }
+          }
+          let lup = i - 3 - 1
+          if (lup >= 0 && lup < 10 && i != 0 && i != 3 && i != 6){
+            if (this.state.squares[lup] == null){
+              color[lup] = 'green'
+            } else{
+              color[lup] = 'red'
+            }
+          }
+
+          let rup = i - 3 + 1
+          if (rup >= 0 && rup < 10 && i != 2 && i != 5 && i != 8){
+            if (this.state.squares[rup] == null){
+              color[rup] = 'green'
+            } else{
+              color[rup] = 'red'
+            }
+          }
+
+          let down = i + 3
+          if (down >= 0 && down < 10){
+            if (this.state.squares[down] == null){
+              color[down] = 'green'
+            } else{
+              color[down] = 'red'
+            }
+          }
+          let rdown = i + 3 + 1
+          if (rdown >= 0 && rdown < 10 && i != 2 && i != 5 && i != 8){
+            if (this.state.squares[rdown] == null){
+              color[rdown] = 'green'
+            } else{
+              color[rdown] = 'red'
+            }
+          }
+
+          let ldown = i + 3 - 1
+          if (ldown >= 0 && ldown < 10 && i != 0 && i != 3 && i != 6){
+            if (this.state.squares[ldown] == null){
+              color[ldown] = 'green'
+            } else{
+              color[ldown] = 'red'
+            }
+          }
+
+          let right = i + 1
+          if (i != 2 && i != 5 && i != 8){
+            if (this.state.squares[right] == null){
+              color[right] = 'green'
+            } else{
+              color[right] = 'red'
+            }
+          }
+
+          let left = i - 1
+          if (i != 0 && i != 3 && i != 6){
+            if (this.state.squares[left] == null){
+              color[left] = 'green'
+            } else{
+              color[left] = 'red'
+            }
+          }
+	b. Add code within the section from 2.g to check if the current color 
+	is green, moving the piece and clearing the cyan tile.
+		if (this.state.color[i] == 'green'){
+          	const curr = this.state.color.indexOf('cyan');
+            	const color =  Array(9).fill('white');
+            	const squares = this.state.squares.slice();
+            	squares[i] = squares[curr]
+            	squares[curr] = null
+            	this.setState({
+              	squares: squares,
+              		color: color,
+              		xIsNext: !this.state.xIsNext,
+             		turnNum: this.state.turnNum + 1
+           	});
+          }
+
+4. Enforce imminent win if chosing not to leave middle title
+	a. Add code to create a grid with possible move choices for each 
+	possible square when clicking on a piece from step 3.a
+		  let temp = squares.slice()
+            temp[up] = this.state.xIsNext ? 'O' : 'X';
+            temp[i] = null;
+	b. Add logic to ONLY color a tile green if...
+		A. Tile is center tile and adjacent tile is open
+		B. Center tile is not filled with current player and adjacent
+		 tile is open
+		C. Center tile is filled with current player and move will 
+		lead to win
+		if (this.state.squares[up] == null && (i == 4 || 
+		(this.state.squares[4] != (this.state.xIsNext ? 'O' : 'X')) ||
+		(calculateWinner(temp) === (this.state.xIsNext ? 'O' : 'X'))))
+	c. Copy logic for all directional checks
+		let up = i - 3
+          if (up >= 0 && up < 10){
+            let temp = squares.slice()
+            temp[up] = this.state.xIsNext ? 'O' : 'X';
+            temp[i] = null;
+            if (this.state.squares[up] == null && (i == 4 || 
+		(this.state.squares[4] != (this.state.xIsNext ? 'O' : 'X'))
+		|| (calculateWinner(temp) ===
+		(this.state.xIsNext ? 'O' : 'X')))){
+              color[up] = 'green'
+            } else{
+              color[up] = 'red'
+            }
+          }
+          let lup = i - 3 - 1
+          if (lup >= 0 && lup < 10 && i != 0 && i != 3 && i != 6){
+            let temp = squares.slice()
+            temp[lup] = this.state.xIsNext ? 'O' : 'X';
+            temp[i] = null;
+            if (this.state.squares[lup] == null && (i == 4 ||
+		(this.state.squares[4] != (this.state.xIsNext ? 'O' : 'X'))
+		|| (calculateWinner(temp) === 
+		(this.state.xIsNext ? 'O' : 'X')))){
+              color[lup] = 'green'
+            } else{
+              color[lup] = 'red'
+            }
+          }
+
+          let rup = i - 3 + 1
+          if (rup >= 0 && rup < 10 && i != 2 && i != 5 && i != 8){
+            let temp = squares.slice()
+            temp[rup] = this.state.xIsNext ? 'O' : 'X';
+            temp[i] = null;
+            if (this.state.squares[rup] == null && (i == 4 ||
+		(this.state.squares[4] != (this.state.xIsNext ? 'O' : 'X'))
+		|| (calculateWinner(temp) ===
+		(this.state.xIsNext ? 'O' : 'X')))){
+              color[rup] = 'green'
+            } else{
+              color[rup] = 'red'
+            }
+          }
+
+          let down = i + 3
+          if (down >= 0 && down < 10){
+            let temp = squares.slice()
+            temp[down] = this.state.xIsNext ? 'O' : 'X';
+            temp[i] = null;
+            if (this.state.squares[down] == null && (i == 4 || 
+		(this.state.squares[4] != (this.state.xIsNext ? 'O' : 'X'))
+		|| (calculateWinner(temp) ===
+		(this.state.xIsNext ? 'O' : 'X')))){
+              color[down] = 'green'
+            } else{
+              color[down] = 'red'
+            }
+          }
+          let rdown = i + 3 + 1
+          if (rdown >= 0 && rdown < 10 && i != 2 && i != 5 && i != 8){
+            let temp = squares.slice()
+            temp[rdown] = this.state.xIsNext ? 'O' : 'X';
+            temp[i] = null;
+            if (this.state.squares[rdown] == null && (i == 4 ||
+		(this.state.squares[4] != (this.state.xIsNext ? 'O' : 'X'))
+		|| (calculateWinner(temp) ===
+		(this.state.xIsNext ? 'O' : 'X')))){
+              color[rdown] = 'green'
+            } else{
+              color[rdown] = 'red'
+            }
+          }
+
+          let ldown = i + 3 - 1
+          if (ldown >= 0 && ldown < 10 && i != 0 && i != 3 && i != 6){
+            let temp = squares.slice()
+            temp[ldown] = this.state.xIsNext ? 'O' : 'X';
+            temp[i] = null;
+            if (this.state.squares[ldown] == null && (i == 4 ||
+		(this.state.squares[4] != (this.state.xIsNext ? 'O' : 'X'))
+		|| (calculateWinner(temp) ===
+		(this.state.xIsNext ? 'O' : 'X')))){
+              color[ldown] = 'green'
+            } else{
+              color[ldown] = 'red'
+            }
+          }
+
+          let right = i + 1
+          if (i != 2 && i != 5 && i != 8){
+            let temp = squares.slice()
+            temp[right] = this.state.xIsNext ? 'O' : 'X';
+            temp[i] = null;
+            if (this.state.squares[right] == null && (i == 4 ||
+		(this.state.squares[4] != (this.state.xIsNext ? 'O' : 'X'))
+		|| (calculateWinner(temp) ===
+		(this.state.xIsNext ? 'O' : 'X')))){
+              color[right] = 'green'
+            } else{
+              color[right] = 'red'
+            }
+          }
+
+          let left = i - 1
+          if (i != 0 && i != 3 && i != 6){
+            let temp = squares.slice()
+            temp[left] = this.state.xIsNext ? 'O' : 'X';
+            temp[i] = null;
+            if (this.state.squares[left] == null && (i == 4 ||
+		(this.state.squares[4] != (this.state.xIsNext ? 'O' : 'X'))
+		|| (calculateWinner(temp) ===
+		(this.state.xIsNext ? 'O' : 'X')))){
+              color[left] = 'green'
+            } else{
+              color[left] = 'red'
+            }
+          }
+
+
+5. Adding Current player text (for clairity)
+	a. Modify status message to display current turn (As well as incoming 
+	player)
+		status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O') + 
+		' | Curr player: ' +  (this.state.xIsNext ? 'O' : 'X');
+
+
+
+GAME INTERACTION DOCUMENTATION:
+-To run the game, type "npm start" into the console after extracting the 
+relevant files.
+-To place a new piece, click on an open tile on the board. Clicking on a 
+filled tile will not have any effect.
+-After each player has added three pieces, they must move their pieces. To 
+select a piece to move, click a piece belonging to the player. Clicking on an 
+open space or the opponent's speech will have no effect.
+-After clicking a piece, the selected piece will be displayed in cyan, with 
+open tiles displayed in green and filled and unallowed titles in red. 
+-To move a piece (after selecting a piece), click on a valid tile (in green). 
+Clicking on a red tile or an uncolored tile will have no effect.
+-To unselect a piece, click on the piece again and it will return to white, 
+allowing you to select a different piece to move.
+-When moving a piece, be mindful that occupying the middle is only allowed if 
+the next move will win. This is enforced by the game by marking valid moves 
+in green for any selected piece.
+
+npm notice 
+npm notice ??  my-app@0.1.0
+npm notice === Tarball Contents ===
+npm notice 3.4kB README.md
+npm notice 809B  package.json
+npm notice 3.9kB public/favicon.ico
+npm notice 1.7kB public/index.html
+npm notice 5.3kB public/logo192.png
+npm notice 9.7kB public/logo512.png
+npm notice 492B  public/manifest.json
+npm notice 67B   public/robots.txt
+npm notice 4.0kB src/index_old.js
+npm notice 789B  src/index.css
+npm notice 9.1kB src/index.js
+npm notice === Tarball Details ===
+npm notice name:          my-app
+npm notice version:       0.1.0
+npm notice filename:      my-app-0.1.0.tgz
+npm notice package size:  24.5 kB
+npm notice unpacked size: 39.2 kB
+npm notice shasum:        30453c214d6d70daf65c1c884216fb3a8c68287f
+npm notice integrity:     sha512-5KjXlAKEn6iA0[...]Br/TMLTUVQARA==
+npm notice total files:   11
+npm notice
+my-app-0.1.0.tgz

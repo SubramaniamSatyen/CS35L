@@ -1,0 +1,26 @@
+#!/usr/bin/python3
+
+"""
+"""
+
+import string
+import random, sys
+
+def main():
+    out = {}
+    lines = sys.stdin.read().splitlines()
+    for line in lines:
+        if line.startswith("CommitDate:"):
+            info = line.split()
+            key = int(info[-1])
+            if (key in out.keys()):
+                out[key][1] += 1
+            else:
+                out[key] = [info[-1], 1]
+    
+    for key in sorted(out.keys()):
+        sys.stdout.write(out[key][0] + " " + str(out[key][1]) + "\n")
+
+
+if __name__ == "__main__":
+    main()

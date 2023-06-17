@@ -1,0 +1,30 @@
+I started by running the command 'git log -S "Even newspaper reports present contradictory information"' in order to find the commit with the specified change. This command is taking advantage of the git log command's -S option, which searches for differences that contain the target string (Either adding, modifying, or removing it). Running this command led to the following output:
+
+
+commit c12b432741eed9a422fbf99fa27af6e7a941d88b
+Author: Arthur David Olson <ado@elsie>
+Date:   Thu Dec 21 11:43:42 1995 -0500
+
+    Eggert changes
+
+    SCCS-file: northamerica
+    SCCS-SID: 7.20
+
+
+From here, we can see that Arthur David Olsen added the change with the description "Eggert changes" on Thursday, December 21st, in 1995, in commit c12b432741eed9a422fbf99fa27af6e7a941d88b. We can use the commmand 'git show c12b432741eed9a422fbf99fa27af6e7a941d88b' to see the changes introduced by the changeset, and can visually confirm that this is in fact the changeset introducing the target string by examining the changed files. 
+
+Finally, by running "git log c12b432741eed9a422fbf99fa27af6e7a941d88b --pretty=fuller", we can see the following:
+
+Author:     Arthur David Olson <ado@elsie>
+AuthorDate: Thu Dec 21 11:43:42 1995 -0500
+Commit:     Paul Eggert <eggert@cs.ucla.edu>
+CommitDate: Wed Jul 18 03:02:20 2012 -0400
+
+    Eggert changes
+
+    SCCS-file: northamerica
+    SCCS-SID: 7.20
+
+
+From this we can see that the commit was done by Paul Eggert, despite being authored by Arthur David Olsen. hat although the commit was  It is worth noting that the section of text that includes the target string is preceded by the text "From Paul Eggert (1995-12-19)".
+

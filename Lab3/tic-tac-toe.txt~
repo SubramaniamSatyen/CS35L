@@ -1,0 +1,210 @@
+1. Initialize React App
+	a. "npx create-react-app my-app"  --> Create app using command
+	b. Delete all files in src directory to allow for us to create our own
+	c. Add new file called "index.css" - styling for home page with (https://codepen.io/gaearon/pen/oWWQNa?editors=0100)
+	d. Add new file called "index.js" - actual home page with (https://codepen.io/gaearon/pen/oWWQNa?editors=0010)
+	e. Add the following import statements to the index.js file...
+		import React from 'react';
+		import ReactDOM from 'react-dom/client';
+		import './index.css';
+	f. Confirm properly setup with npm start
+
+2. Practice Passing Data Through Properties
+	a. By initializing each square on each board with a value, we can use this value in the square to make the board control multiple squares.
+		return <Square value={i} />;
+	b. As a second part of this process, we modify the square to use the value.
+		{this.props.value}
+
+3. Making Components Interactive
+	a. Begin by taking advantage of the Button component's built in property "onClick". We can set this equal to a function that runs when the button is clicked. In this case we are using a single instance function to log "Clicked!" to the console.
+		<button className="square" onClick={ function() {console.log("Clicked!"); }}>
+	b. Can shorten syntax to the following (since we don't need to give it a name).
+		<button className="square" onClick={ () => {console.log("Clicked!"); }}>
+	c. Now we want to save the state of the square, which we do with a member variable for the component class. We will replace the default constructor to specify the necessary state variables. Note the call to super() - this is implicit in C++, but should be done explicitly in JavaScript.
+    		constructor(props) {
+        		super(props);
+        		this.state = {
+        			value: null,
+        		};
+    		}
+	d. Replace the square number from 2.b with the state variable this.state.value.
+		{this.state.value}
+	e. Replace the console log from 3.a to modify the state to an 'X' and move the onClick to the next line (they suggest this for readability, but optional).
+	        onClick={ () => { this.setState({value: "X"})}}>
+
+4. Inspect code with React Dev Tools Chrome Extention
+	a. By downloading and enabling extention, can see component hierarchy visually in inspect element dev tools page (navigate to Components tab).
+
+5. Lifting State to Higher Components
+	a. It's better practice to have higher components manage state for children if there is logic that depends on all of the child states (ex: winning a tic-tac-toe game). We'll move the square state to the board for this reason.
+	b. Declare state in board constructor (we'll do this as an array of size 9 - for each square).
+		constructor(props) {
+			super(props);
+			this.state = {
+				squares: Array(9).fill(null),
+			};
+		}
+	c. Modify the prop passing from 2.b to instead pass the square's value from the board's state array (this will be null when initializing, but will change as the game moves forward).
+		return <Square value={this.state.squares[i]} />;
+	d. We also want to pass the Square a way to handle the click and update the state in board. To do this we pass a function to each square with the square number, so they can call this when clicked, and update the state variable in board.
+		onClick={() => this.handleClick(i)}
+	e. Revert 3.d back to 2.b - we want to use the state from the board that is passed to the square.
+		{this.props.value}
+	f. Modify 3.e to instead call the function passed from board to maintain board's state. 
+		onClick={ () => { this.props.onclick()}}>
+	g. Comment out square's constructor - we don't need square to have a state anymore, we've moved it to board.
+	h. Implement state maintaining function handleClick() in the board component class. This should modify the state array to mark the clicked square, then replace the state with the new array.
+		handleClick(i) {
+			const squares = this.state.squares.slice();
+			squares[i] = 'X';
+			this.setState({squares: squares});
+		}
+
+6. Commenting on Immutability
+	a. Two possible approaches to manipulating data: 
+		A. Mutate the data directly by changing values
+		B. Copy data and replace data with the modified copy
+	b.Though end result is the same, several benefits of going with option 6.a.B.
+	c. Allows us to undo changes very easily (since we can keep previous state in some sort of storage.
+	d. Detecting when an object is changed is simpler when we replace the entire object (due to immutability). Helps with React's system to update components - called "pure components".
+
+7. Function Components
+	a. We replace Square with a function component - since it doesn't have any state or logic associated with it, just properties and details on rendering.
+		function Square(props) {
+  			return (
+    				<button className="square" onClick={props.onClick}>
+      				{props.value}
+    				</button>
+  			);
+		}
+
+8. Implementing Turn Functionality
+	a. Modify the state object of board to keep track of whose turn it is (this can be done with a boolean)
+		xIsNext: true
+	b. Modify the handleClick() function to update the state to the opposite turn.
+     	squares[i] = this.state.xIsNext ? 'X' : 'O';
+     	this.setState({
+     		squares: squares,
+     		xIsNext: !this.state.xIsNext,
+     	});
+	c.Update the status variable to display the current turn. This will dynamically rerender as the state is updated
+		const status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+
+9. Implementing Win Detection
+	a. The tutorial is providing a function that can detect whether there is a winner based off of the small fixed number of possibilities for winning within a 3x3 tic-tac-toe grid. The below function returns 'X', 'O', or null, corresponding to if there currently is a winner.
+	function calculateWinner(squares) {
+		const lines = [
+			[0, 1, 2],
+			[3, 4, 5],
+			[6, 7, 8],
+			[0, 3, 6],
+			[1, 4, 7],
+			[2, 5, 8],
+			[0, 4, 8],
+			[2, 4, 6],
+		];
+		for (let i = 0; i < lines.length; i++) {
+			const [a, b, c] = lines[i];
+			if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+				return squares[a];
+			}
+		}
+		return null;
+	}
+	b. To display the win text, we will modify the status message. By calling the calculateWinner() function, then setting the status appropriately, we can effectively display a win message.
+		const winner = calculateWinner(this.state.squares);
+		let status;
+		if (winner) {
+			status = 'Winner: ' + winner;
+		} else {
+			status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+		}
+	c. Modify the handleClick() function to do nothing if there is a winner or if the square is not empty. Add the following to the start of handleClick().
+		if (calculateWinner(squares) || squares[i]) {
+			return;
+		}
+	
+
+9. Implementing Storage of Move History
+	a. We'll plan to store the history of the board as an array containing each state of the board for each turn. To do this, we'll push the state of the board to a Game component - which can maintain the board and the history.
+	b. Start this process by adding a constructor that initializes the history and the turn.
+	constructor(props) {
+		super(props);
+		this.state = {
+			history: [{
+			squares: Array(9).fill(null),
+		}],
+		xIsNext: true,
+		};
+	}
+	c. Remove the board constructor - this will help catch errors and matches our eventual goal of lifting the state up.
+	d. Replace the added code from 5.c. to use this.props.squares[i], since it will be using the board maintained in the Game component.
+		value={this.props.squares[i]}
+	e. Replace the added code from 5.d to use the this.props.onClick(i), since the board maintence will now be managed by Game (and passed as a prop).
+		onClick={() => this.props.onClick(i)}
+	f. Move the winner calculation code from the Board render function to the Game render function. We also have to modify to use the Game's slightly different state - which includes a history of board positions rather than just a single board position.	
+		const history = this.state.history;
+		const current = history[history.length - 1];
+		const winner = calculateWinner(current.squares);
+		let status;
+		if (winner) {
+			status = 'Winner: ' + winner;
+		} else {
+			status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
+		}
+	g. Move the status display code from Board to Game
+		<div>{status}</div>
+	h. Modify the Board component within Game to accept the squares as props.
+		squares={current.squares}
+		onClick={(i) => this.handleClick(i)}
+	i. Lift the implementation of the handleClick function from Board to Game, and account for the new structure of history, rather than a single board position.
+		handleClick(i) {
+			const history = this.state.history;
+			const current = history[history.length - 1];
+			const squares = current.squares.slice();
+			if (calculateWinner(squares) || squares[i]) {
+				return;
+			}
+			squares[i] = this.state.xIsNext ? 'X' : 'O';
+			this.setState({
+				history: history.concat([{
+				squares: squares,
+				}]),
+				xIsNext: !this.state.xIsNext,
+			});
+		}
+
+10. Displaying Past Moves
+	a. Take advantage of the map() function to map the history array to create a function that creates a button which will jumpTo the turn #. We do this by taking advantage of an index parameter and adding the jumpTo() function to the button's onClick property. We'll implement jumpTo() such that it modifies the board to make the next state match the state of the index in history.
+		const moves = history.map((step, move) => {
+		const desc = move ?
+			'Go to move #' + move :
+			'Go to game start';
+		return (
+			<li>
+				<button onClick={() => this.jumpTo(move)}>{desc}</button>
+			</li>
+		);
+	});
+	b. Since we're using a list, we should try to specify a key (allowing React to optimize rerendering of the list as it changes). We do this by modifying the map() function call to return a <li> with a key.
+		<li key={move}>
+
+	c. Add a step number to the state. We'll use this when implementing the jumpTo() function.
+		stepNumber: 0,
+	d. Create the jumpTo() function. This should a accept the target step as a parameter, reset the current step, and update the board. We won't be changing the history, allowing us to overwrite it.
+		jumpTo(step) {
+			this.setState({
+				stepNumber: step,
+				xIsNext: (step % 2) === 0,
+			});
+		}
+	e. Modify the handle click function to update the history - when we click, it should restructure the history based off of the current stepNumber, effectively resetting the history when rewinding and playing forward.
+		const history = this.state.history.slice(0, this.state.stepNumber + 1); 
+		stepNumber: history.length,
+	f. Modify the render function to display the current stepNumber index of history.
+		const current = history[this.state.stepNumber];
+
+
+		
+
+
